@@ -16,7 +16,10 @@ export default function Navbar() {
         </div>
         <nav className="flex items-center gap-2">
           <NavLink to="/dashboard" className={linkClass}>Dashboard</NavLink>
+          <NavLink to="/analytics" className={linkClass}>Analytics</NavLink>
           <NavLink to="/transactions" className={linkClass}>Transactions</NavLink>
+          <NavLink to="/recurring" className={linkClass}>Recurring</NavLink>
+          <NavLink to="/savings" className={linkClass}>Savings</NavLink>
           <NavLink to="/goals" className={linkClass}>Goals</NavLink>
           <NavLink to="/profile" className={linkClass}>Profile</NavLink>
           <NavLink to="/xp" className={linkClass}>Award XP</NavLink>

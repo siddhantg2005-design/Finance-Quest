@@ -8,6 +8,9 @@ import Transactions from "./pages/Transactions";
 import Goals from "./pages/Goals";
 import Profile from "./pages/Profile";
 import AwardXP from "./pages/AwardXP";
+import Analytics from "./pages/Analytics";
+import Recurring from "./pages/Recurring";
+import Savings from "./pages/Savings";
 
 function AuthLayout() {
   const { user } = useAuth();
@@ -30,6 +33,9 @@ export default function App() {
       <Route element={<AuthLayout />}> 
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/transactions" element={<Transactions />} />
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/recurring" element={<Recurring />} />
+        <Route path="/savings" element={<Savings />} />
         <Route path="/goals" element={<Goals />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/xp" element={<AwardXP />} />

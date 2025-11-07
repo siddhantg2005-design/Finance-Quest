@@ -18,6 +18,46 @@ const getStoredUser = () => {
   }
 };
 
+// Recurring helpers
+export const Recurring = {
+  async list() {
+    const { data } = await api.get('/api/recurring/');
+    return data;
+  },
+  async create(payload) {
+    const { data } = await api.post('/api/recurring/create/', payload);
+    return data;
+  },
+  async runNow(id) {
+    const { data } = await api.post(`/api/recurring/${id}/run-now/`);
+    return data;
+  },
+  async runDue() {
+    const { data } = await api.post('/api/recurring/run-due/');
+    return data;
+  }
+};
+
+// Savings helpers
+export const Savings = {
+  async list() {
+    const { data } = await api.get('/api/savings/');
+    return data;
+  },
+  async create(payload) {
+    const { data } = await api.post('/api/savings/create/', payload);
+    return data;
+  },
+  async runNow(id) {
+    const { data } = await api.post(`/api/savings/${id}/run-now/`);
+    return data;
+  },
+  async runDue() {
+    const { data } = await api.post('/api/savings/run-due/');
+    return data;
+  }
+};
+
 // Axios instance
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -119,3 +159,21 @@ export async function awardXP(user_id, reason, xp_amount) {
   const { data } = await api.post('/api/xp/award/', { user_id, reason, xp_amount });
   return data;
 }
+
+// Analytics helpers
+export const Analytics = {
+  async spendByCategory(month) {
+    const params = month ? { month } : undefined;
+    const { data } = await api.get('/api/analytics/spend-by-category/', { params });
+    return data;
+  },
+  async incomeVsExpense(range) {
+    const params = range || {};
+    const { data } = await api.get('/api/analytics/income-vs-expense/', { params });
+    return data;
+  },
+  async goalProgress() {
+    const { data } = await api.get('/api/analytics/goal-progress/');
+    return data;
+  },
+};

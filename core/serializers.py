@@ -21,6 +21,7 @@ class ProfileSerializer(serializers.Serializer):
 class TransactionSerializer(serializers.Serializer):
     id = UUIDStrField(read_only=True)
     user_id = UUIDStrField(required=True)
+    type = serializers.ChoiceField(choices=["income", "expense"], default="expense")
     amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     currency = serializers.CharField(max_length=3, default="USD")
     category = serializers.CharField(allow_null=True, allow_blank=True, required=False)

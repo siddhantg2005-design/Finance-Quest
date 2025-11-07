@@ -5,7 +5,7 @@ export default function TransactionsPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ amount: "", currency: "USD", category: "", description: "", occurred_at: "" });
+  const [form, setForm] = useState({ type: "expense", amount: "", currency: "USD", category: "", description: "", occurred_at: "" });
 
   async function refresh() {
     setLoading(true);
@@ -30,6 +30,7 @@ export default function TransactionsPage() {
     try {
       const payload = {
         user_id: profile?.id,
+        type: form.type || "expense",
         amount: Number(form.amount),
         currency: form.currency || "USD",
         category: form.category || null,
@@ -37,7 +38,7 @@ export default function TransactionsPage() {
         occurred_at: form.occurred_at || new Date().toISOString(),
       };
       await Transactions.create(payload);
-      setForm({ amount: "", currency: "USD", category: "", description: "", occurred_at: "" });
+      setForm({ type: "expense", amount: "", currency: "USD", category: "", description: "", occurred_at: "" });
       await refresh();
     } catch (e) {
       setError(e?.response?.data?.error || "Failed to create transaction");
@@ -58,13 +59,17 @@ export default function TransactionsPage() {
       <div className="bg-white rounded-2xl shadow p-6">
         <h2 className="text-xl font-semibold text-slate-800">Add Transaction</h2>
         {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
-        <form onSubmit={onSubmit} className="mt-4 grid sm:grid-cols-5 gap-3">
+        <form onSubmit={onSubmit} className="mt-4 grid sm:grid-cols-6 gap-3">
+          <select className="border rounded-lg px-3 py-2" value={form.type} onChange={(e)=>setForm({...form, type:e.target.value})}>
+            <option value="expense">expense</option>
+            <option value="income">income</option>
+          </select>
           <input className="border rounded-lg px-3 py-2" placeholder="Amount" type="number" step="0.01" value={form.amount} onChange={(e)=>setForm({...form, amount:e.target.value})} required />
           <input className="border rounded-lg px-3 py-2" placeholder="Currency" value={form.currency} onChange={(e)=>setForm({...form, currency:e.target.value})} />
           <input className="border rounded-lg px-3 py-2" placeholder="Category" value={form.category} onChange={(e)=>setForm({...form, category:e.target.value})} />
           <input className="border rounded-lg px-3 py-2" placeholder="Description" value={form.description} onChange={(e)=>setForm({...form, description:e.target.value})} />
           <input className="border rounded-lg px-3 py-2" type="datetime-local" value={form.occurred_at} onChange={(e)=>setForm({...form, occurred_at:e.target.value})} />
-          <div className="sm:col-span-5">
+          <div className="sm:col-span-6">
             <button className="mt-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Create</button>
           </div>
         </form>
