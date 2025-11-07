@@ -1,0 +1,281 @@
+openapi: 3.0.3
+info:
+  title: Finance Quest API
+  version: 0.1.0
+servers:
+  - url: https://api.financequest.example.com
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string, example: Unauthorized }
+    Transaction:
+      type: object
+      required: [id, user_id, amount, currency, occurred_at, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid, example: "2cba5d65-1cbe-4e53-9a1f-1a3b3f6d7b99" }
+        user_id: { type: string, format: uuid, example: "11111111-1111-1111-1111-111111111111" }
+        amount: { type: number, format: decimal, example: 12.5 }
+        currency: { type: string, example: "USD" }
+        category: { type: string, nullable: true, example: "Food" }
+        description: { type: string, nullable: true, example: "Lunch" }
+        occurred_at: { type: string, format: date-time, example: "2025-01-01T12:00:00Z" }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    Goal:
+      type: object
+      required: [id, user_id, name, target_amount, status, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid, example: "8b3d2b50-2f8f-4f4a-9d45-8a7d47a32e0c" }
+        user_id: { type: string, format: uuid }
+        name: { type: string, example: "Emergency Fund" }
+        target_amount: { type: number, format: decimal, example: 1000.0 }
+        current_amount: { type: number, format: decimal, example: 200.0 }
+        deadline: { type: string, format: date, nullable: true, example: "2025-06-30" }
+        status: { type: string, enum: [active, paused, completed, archived], example: active }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    Profile:
+      type: object
+      required: [user_id, xp, level, badges]
+      properties:
+        user_id: { type: string, format: uuid }
+        xp: { type: integer, example: 120 }
+        level: { type: integer, example: 3 }
+        badges:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string, example: "first_tx" }
+              awarded_at: { type: string, example: "2025-01-01T00:00:00Z" }
+    XPAwardRequest:
+      type: object
+      required: [user_id, reason, xp_amount]
+      properties:
+        user_id: { type: string, format: uuid }
+        reason: { type: string, example: "add_transaction" }
+        xp_amount: { type: integer, example: 10 }
+    XPAwardResponse:
+      type: object
+      required: [xp_awarded, new_level, new_badges]
+      properties:
+        xp_awarded: { type: integer, example: 10 }
+        new_level: { type: integer, example: 2 }
+        new_badges:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string, example: "first_tx" }
+              awarded_at: { type: string, example: "2025-01-01T00:00:00Z" }
+security:
+  - bearerAuth: []
+paths:
+  /auth/session:
+    post:
+      summary: Create/verify session (optional)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: { email: "user@example.com", password: "secret" }
+      responses:
+        "200":
+          description: Session created
+          content:
+            application/json:
+              example: { access_token: "eyJhbGciOi...", token_type: "Bearer", user: { id: "1111-...", email: "user@example.com" } }
+        "400": { description: Bad request, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "401": { description: Unauthorized, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /transactions:
+    get:
+      summary: List transactions (scoped by user)
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, example: 20 }
+        - in: query
+          name: offset
+          schema: { type: integer, example: 0 }
+      responses:
+        "200":
+          description: OK
+          headers:
+            Authorization:
+              schema: { type: string }
+              description: "Required: Bearer <token>"
+          content:
+            application/json:
+              example:
+                - id: "2cba5d65-1cbe-4e53-9a1f-1a3b3f6d7b99"
+                  user_id: "11111111-1111-1111-1111-111111111111"
+                  amount: 12.5
+                  currency: "USD"
+                  category: "Food"
+                  description: "Lunch"
+                  occurred_at: "2025-01-01T12:00:00Z"
+                  created_at: "2025-01-01T12:00:00Z"
+                  updated_at: "2025-01-01T12:00:00Z"
+        "401": { description: Unauthorized, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    post:
+      summary: Create transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Transaction" }
+            example:
+              user_id: "11111111-1111-1111-1111-111111111111"
+              amount: 10.0
+              currency: "USD"
+              category: "Transport"
+              description: "Bus"
+              occurred_at: "2025-01-01T10:00:00Z"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              example:
+                id: "a1b2c3d4-...."
+                user_id: "11111111-1111-1111-1111-111111111111"
+                amount: 10.0
+                currency: "USD"
+                occurred_at: "2025-01-01T10:00:00Z"
+                created_at: "2025-01-01T10:00:00Z"
+                updated_at: "2025-01-01T10:00:00Z"
+                xp_award:
+                  xp_awarded: 10
+                  new_level: 2
+                  new_badges: [ { code: "first_tx", awarded_at: "2025-01-01T00:00:00Z" } ]
+        "400": { description: Bad request, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "401": { description: Unauthorized, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /transactions/{id}:
+    get:
+      summary: Get transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Transaction" } } } }
+        "401": { description: Unauthorized, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    put:
+      summary: Update transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Transaction" }
+      responses:
+        "200": { description: Updated, content: { application/json: { schema: { $ref: "#/components/schemas/Transaction" } } } }
+        "400": { description: Bad request, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "401": { description: Unauthorized, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    delete:
+      summary: Delete transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: Deleted, content: { application/json: { example: { ok: true } } } }
+        "401": { description: Unauthorized, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /goals:
+    get:
+      summary: List goals (scoped by user)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              example:
+                - id: "8b3d2b50-2f8f-4f4a-9d45-8a7d47a32e0c"
+                  user_id: "11111111-1111-1111-1111-111111111111"
+                  name: "Emergency Fund"
+                  target_amount: 1000.0
+                  current_amount: 200.0
+                  status: "active"
+        "401": { description: Unauthorized, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    post:
+      summary: Create goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Goal" }
+            example:
+              user_id: "11111111-1111-1111-1111-111111111111"
+              name: "New Laptop"
+              target_amount: 800.0
+              current_amount: 0
+              status: "active"
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Goal" } } } }
+        "400": { description: Bad request, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "401": { description: Unauthorized, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /xp/award:
+    post:
+      summary: Award XP to a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/XPAwardRequest" }
+            example: { user_id: "11111111-1111-1111-1111-111111111111", reason: "weekly_bonus", xp_amount: 20 }
+      responses:
+        "200":
+          description: XP awarded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/XPAwardResponse" }
+              example:
+                xp_awarded: 20
+                new_level: 3
+                new_badges: []
+        "400": { description: Bad request, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "401": { description: Unauthorized, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /users/{id}/profile:
+    get:
+      summary: Get user profile (xp, level, badges)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+              example:
+                user_id: "11111111-1111-1111-1111-111111111111"
+                xp: 120
+                level: 3
+                badges: [ { code: "first_tx", awarded_at: "2025-01-01T00:00:00Z" } ]
+        "401": { description: Unauthorized, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
