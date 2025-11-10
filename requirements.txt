@@ -6,3 +6,4 @@ dj-database-url>=2.2,<3
 PyJWT>=2.8,<3
 django-cors-headers>=4.3,<5
 tzdata>=2023.3
+requests
